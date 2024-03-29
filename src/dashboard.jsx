@@ -119,6 +119,7 @@ export default function MovieApp() {
     setSearchQuery(event.target.value);
   };
 
+  // Validasi Search Input & Send Data
   const handleSearchSubmit = (query) => {
     console.log("ini adalah data event : ", query);
     if (query?.trim() === "") return setShowModal(true);
@@ -171,7 +172,7 @@ export default function MovieApp() {
       {/* Modal Alert */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="flex flex-col justify-center items-center bg-gray-700 p-8 rounded-lg shadow-md border animate__animated animate__bounceInDown">
+          <div className="flex flex-col justify-center items-center bg-gray-900 p-8 rounded-lg shadow-md border animate__animated animate__bounceInDown">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -190,7 +191,7 @@ export default function MovieApp() {
             <p className="text-xl text-yellow-600 px-8 py-2">
               <strong>Upsss...</strong>
             </p>
-            <p className=" px-8">What do you want to search Broo???</p>
+            <p className=" px-8">What do you want to search, Broo???</p>
             <button
               onClick={() => setShowModal(false)}
               className="bg-red-600 text-white px-4 py-2 rounded-md mt-12 hover:bg-red-700"
@@ -247,7 +248,9 @@ export default function MovieApp() {
               <div className="h-[600px]  flex flex-col justify-center items-center">
                 <div className=" text-center">
                   <p className="text-5xl pb-4">
-                    <strong>Enjoy With Our Movies</strong>
+                    <span className="animate-typing">
+                      Enjoy With Our Movies
+                    </span>
                   </p>
                   <p className="pb-5">
                     Lorem, ipsum dolor sit amet consectetur adipisicing elit.
