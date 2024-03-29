@@ -5,6 +5,7 @@ import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
 import { StarIcon } from "@heroicons/react/20/solid";
 import { useNavigate } from "react-router-dom";
+import "animate.css";
 
 //Initial API KEY
 const API_KEY = "77b3a402465e7a82a0baf4ac6fbae43d";
@@ -17,6 +18,7 @@ export default function MovieApp() {
   const [query, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   //Fetching Data API {{ POPULAR }}
   useEffect(() => {
@@ -119,7 +121,7 @@ export default function MovieApp() {
 
   const handleSearchSubmit = (query) => {
     console.log("ini adalah data event : ", query);
-    if (query === "") return alert("Mau Cari Film Apa?");
+    if (query?.trim() === "") return setShowModal(true);
     navigate(`/resultSearch`, {
       state: {
         title: query,
@@ -166,6 +168,38 @@ export default function MovieApp() {
           </svg>
         </div>
       </div>
+      {/* Modal Alert */}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="flex flex-col justify-center items-center bg-gray-700 p-8 rounded-lg shadow-md border animate__animated animate__bounceInDown">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-12 h-12"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
+              />
+            </svg>
+
+            <p className="text-xl text-yellow-600 px-8 py-2">
+              <strong>Upsss...</strong>
+            </p>
+            <p className=" px-8">What do you want to search Broo???</p>
+            <button
+              onClick={() => setShowModal(false)}
+              className="bg-red-600 text-white px-4 py-2 rounded-md mt-12 hover:bg-red-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       {/* Loading Spinner */}
       {isLoading && (
         <div className="flex justify-center items-center h-screen">
@@ -190,6 +224,7 @@ export default function MovieApp() {
           </div>
         </div>
       )}
+      {/* Content */}
       {!isLoading && (
         <section>
           {/* Slicker Search */}
