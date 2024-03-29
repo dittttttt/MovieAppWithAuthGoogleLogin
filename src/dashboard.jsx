@@ -248,9 +248,8 @@ export default function MovieApp() {
               <div className="h-[600px]  flex flex-col justify-center items-center">
                 <div className=" text-center">
                   <p className="text-5xl pb-4">
-                    <span className="animate-typing">
-                      Enjoy With Our Movies
-                    </span>
+                    <strong><span>Enjoy With Our Movies</span></strong>
+                    
                   </p>
                   <p className="pb-5">
                     Lorem, ipsum dolor sit amet consectetur adipisicing elit.
