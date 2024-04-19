@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
 import { StarIcon } from "@heroicons/react/20/solid";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import "animate.css";
+import { Dropdown } from "flowbite-react";
+import { HiLogout, HiViewGrid, HiUserCircle } from "react-icons/hi";
 
 //Initial API KEY
 const API_KEY = "77b3a402465e7a82a0baf4ac6fbae43d";
@@ -19,6 +23,61 @@ export default function MovieApp() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const token = localStorage.getItem("token");
+  const [user, setDataUser] = useState({});
+
+  useEffect(() => {
+    console.log("localStorage ", localStorage.getItem("token"));
+    if (localStorage.getItem("token") === null) {
+      navigate("/");
+    }
+  }, []);
+
+  useEffect(() => {
+    async function fetchData() {
+      // You can await here
+      if (localStorage.getItem("login") === "google component") {
+        const decoded = jwtDecode(localStorage.getItem("token"));
+
+        console.log("Data User : ", decoded);
+        setDataUser(decoded);
+        console.log("User : ", user);
+        if (decoded?.exp < new Date() / 1000) {
+          alert("token expire");
+        }
+      } else {
+        try {
+          const res = await fetch(
+            "https://shy-cloud-3319.fly.dev/api/v1/auth/me",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          // const res = await axios.get(
+          //   "https://shy-cloud-3319.fly.dev/api/v1/auth/me",
+          //   {
+          //     headers: {
+          //       Authorization: `Bearer123 ${localStorage.getItem("token")}`,
+          //     },
+          //   }
+          // );
+          const resJson = await res?.json();
+          if (res?.status === 401) {
+            alert("token expire");
+            return;
+          }
+          console.log("first", resJson);
+        } catch (error) {
+          alert("token expire");
+          console.log("error ", error);
+        }
+      }
+    }
+    fetchData();
+  }, []);
 
   //Fetching Data API {{ POPULAR }}
   useEffect(() => {
@@ -151,22 +210,55 @@ export default function MovieApp() {
             <a href="/upcoming">Up Coming</a>
           </li>
         </ul>
-        <div className="flex gap-4">
-          <p>Aditya</p>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-8 h-8"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-            />
-          </svg>
+        <div className="flex gap-4 ">
+          {token ? (
+            <Dropdown inline label={user?.name?.split(" ")[0]}>
+              <Dropdown.Header>
+                <div className="flex gap-4 items-center">
+                  {user?.picture ? (
+                    <img
+                      src={user?.picture}
+                      alt="User Picture"
+                      className="w-10 h-10 rounded-full"
+                    />
+                  ) : (
+                    <img
+                      src="/src/assets/user.png"
+                      alt="User Picture"
+                      className="w-10 h-10 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <span className="block text-sm">{user?.name}</span>
+                    <span className="block truncate text-sm font-medium">
+                      {user?.email}
+                    </span>
+                  </div>
+                </div>
+              </Dropdown.Header>
+              <Dropdown.Divider />
+              <Dropdown.Item
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  navigate("/login");
+                }}
+                icon={HiLogout}
+              >
+                Sign out
+              </Dropdown.Item>
+            </Dropdown>
+          ) : (
+            <div>
+              <button
+                className="py-2 px-4 rounded bg-yellow-600 hover:bg-yellow-700"
+                onClick={() => {
+                  navigate("/login");
+                }}
+              >
+                Login
+              </button>
+            </div>
+          )}
         </div>
       </div>
       {/* Modal Alert */}

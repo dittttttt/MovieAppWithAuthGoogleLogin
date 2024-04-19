@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { StarIcon } from "@heroicons/react/20/solid";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Dropdown } from "flowbite-react";
+import { HiLogout, HiViewGrid, HiUserCircle } from "react-icons/hi";
+import { jwtDecode } from "jwt-decode";
 
 //Initial API KEY
 const API_KEY = "77b3a402465e7a82a0baf4ac6fbae43d";
@@ -14,8 +17,62 @@ export default function MovieApp() {
   const [searchQuery, setSearchQuery] = useState("");
   const [numOfItems, setNumOfItems] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setDataUser] = useState({});
 
   const navigate = useNavigate();
+
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    console.log("localStorage ", localStorage.getItem("token"));
+    if (localStorage.getItem("token") === null) {
+      navigate("/");
+    }
+  }, []);
+
+  useEffect(() => {
+    async function fetchData() {
+      // You can await here
+      if (localStorage.getItem("login") === "google component") {
+        const decoded = jwtDecode(localStorage.getItem("token"));
+        console.log("Decode : ", decoded);
+        setDataUser(decoded);
+        if (decoded?.exp < new Date() / 1000) {
+          alert("token expire");
+        }
+      } else {
+        try {
+          const res = await fetch(
+            "https://shy-cloud-3319.fly.dev/api/v1/auth/me",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          // const res = await axios.get(
+          //   "https://shy-cloud-3319.fly.dev/api/v1/auth/me",
+          //   {
+          //     headers: {
+          //       Authorization: `Bearer123 ${localStorage.getItem("token")}`,
+          //     },
+          //   }
+          // );
+          const resJson = await res?.json();
+          if (res?.status === 401) {
+            alert("token expire");
+            return;
+          }
+          console.log("first", resJson);
+        } catch (error) {
+          alert("token expire");
+          console.log("error ", error);
+        }
+      }
+    }
+    fetchData();
+  }, []);
 
   let location = useLocation();
   console.log("location : ", location.state.title);
@@ -102,23 +159,41 @@ export default function MovieApp() {
             <a href="/upcoming">Up Coming</a>
           </li>
         </ul>
-        <div className="flex gap-4">
-          <p>Aditya</p>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-8 h-8"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-            />
-          </svg>
-        </div>
+        <Dropdown inline label={user?.name?.split(" ")[0]}>
+              <Dropdown.Header>
+                <div className="flex gap-4 items-center">
+                  {user?.picture ? (
+                    <img
+                      src={user?.picture}
+                      alt="User Picture"
+                      className="w-10 h-10 rounded-full"
+                    />
+                  ) : (
+                    <img
+                      src="/src/assets/user.png"
+                      alt="User Picture"
+                      className="w-10 h-10 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <span className="block text-sm">{user?.name}</span>
+                    <span className="block truncate text-sm font-medium">
+                      {user?.email}
+                    </span>
+                  </div>
+                </div>
+              </Dropdown.Header>
+              <Dropdown.Divider />
+              <Dropdown.Item
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  navigate("/login");
+                }}
+                icon={HiLogout}
+              >
+                Sign out
+              </Dropdown.Item>
+            </Dropdown>
       </div>
       {/* Loading Spinner */}
       {isLoading && (
@@ -145,75 +220,111 @@ export default function MovieApp() {
         </div>
       )}
       {!isLoading && (
-        <section>{/* Search Movie Movies */}
-        <div className="flex justify-center mt-12 ">
-          <div className="py-12">
-            <div className=" text-center p-12">
-              <p className="text-5xl pb-4">
-                <strong>Search "{location.state.title}"</strong>
-              </p>
-              <p className="pb-5">
-                Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                Reprehenderit nobis pariatur explicabo,
-              </p>
-            </div>
-            {/* Show Search Movie */}
-            <div>
-              {isNotFound ? ( // Tampilkan pesan "Not Found" jika tidak ada hasil pencarian
-                <div className="">
-                  <div className="text-center font-bold text-red-500  text-3xl h-[200px] max-w-[90%] mx-auto border flex justify-center items-center">
-                    Movie Not Found
-                  </div>
-                  <div className=" text-center p-12">
-                    <p className="text-5xl pb-4">
-                      <strong>Recomend Movies</strong>
-                    </p>
-                    <p className="pb-5">
-                      Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                      Reprehenderit nobis pariatur explicabo,
-                    </p>
-                    <div className="flex justify-center gap-4 mt-4">
-                      {/* Search */}
-                      <div>
-                        <input
-                          type="text"
-                          name="search"
-                          placeholder="Search"
-                          value={query}
-                          onChange={handleSearchChange}
-                          className="rounded-md p-2 text-black"
-                        />
-                      </div>
-                      {/* Num of Items */}
-                      <div>
-                        <select
-                          id="numOfItems"
-                          className="text-black py-2 px-5 rounded-md"
-                          value={numOfItems}
-                          onChange={handleNumOfItemsChange}
-                        >
-                          <option value="10">10</option>
-                          <option value="15">15</option>
-                          <option value="20">20</option>
-                          <option value="50">50</option>
-                        </select>
+        <section>
+          {/* Search Movie Movies */}
+          <div className="flex justify-center mt-12 ">
+            <div className="py-12">
+              <div className=" text-center p-12">
+                <p className="text-5xl pb-4">
+                  <strong>Search "{location.state.title}"</strong>
+                </p>
+                <p className="pb-5">
+                  Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+                  Reprehenderit nobis pariatur explicabo,
+                </p>
+              </div>
+              {/* Show Search Movie */}
+              <div>
+                {isNotFound ? ( // Tampilkan pesan "Not Found" jika tidak ada hasil pencarian
+                  <div className="">
+                    <div className="text-center font-bold text-red-500  text-3xl h-[200px] max-w-[90%] mx-auto border flex justify-center items-center">
+                      Movie Not Found
+                    </div>
+                    <div className=" text-center p-12">
+                      <p className="text-5xl pb-4">
+                        <strong>Recomend Movies</strong>
+                      </p>
+                      <p className="pb-5">
+                        Lorem, ipsum dolor sit amet consectetur adipisicing
+                        elit. Reprehenderit nobis pariatur explicabo,
+                      </p>
+                      <div className="flex justify-center gap-4 mt-4">
+                        {/* Search */}
+                        <div>
+                          <input
+                            type="text"
+                            name="search"
+                            placeholder="Search"
+                            value={query}
+                            onChange={handleSearchChange}
+                            className="rounded-md p-2 text-black"
+                          />
+                        </div>
+                        {/* Num of Items */}
+                        <div>
+                          <select
+                            id="numOfItems"
+                            className="text-black py-2 px-5 rounded-md"
+                            value={numOfItems}
+                            onChange={handleNumOfItemsChange}
+                          >
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
+                    <div className="mx-auto max-w-[90%] grid grid-cols-5 gap-8 pb-2">
+                      {filteredData?.map((e) => (
+                        <div
+                          key={e?.id}
+                          onClick={() => {
+                            navigate("/detail", { state: { id: e?.id } });
+                          }}
+                          className="w-[250px] px-3"
+                        >
+                          <img
+                            src={`https://image.tmdb.org/t/p/w200/${e?.poster_path}`}
+                            alt=""
+                            className="rounded-md w-full hover:scale-105"
+                          />
+                          <p className="mt-4">
+                            <strong>{e?.title}</strong>
+                          </p>
+                          <div className="flex">
+                            <p className="text-gray-400">{e?.release_date}</p>
+                          </div>
+                          <div className="flex">
+                            <StarIcon className="h-6  text-yellow-500"></StarIcon>
+                            <p className="ms-1">{e?.vote_average.toFixed(1)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="mx-auto max-w-[90%] grid grid-cols-5 gap-8 pb-2">
-                    {filteredData?.map((e) => (
+                ) : (
+                  <div className="mx-auto max-w-[90%] grid grid-cols-5 gap-8 pb-2 ">
+                    {search?.map((e) => (
                       <div
                         key={e?.id}
                         onClick={() => {
-                          navigate("/detail", { state: { id: e?.id } });
+                          navigate("/detailSearch", { state: { id: e?.id } });
                         }}
                         className="w-[250px] px-3"
                       >
-                        <img
-                          src={`https://image.tmdb.org/t/p/w200/${e?.poster_path}`}
-                          alt=""
-                          className="rounded-md w-full hover:scale-105"
-                        />
+                        {e?.poster_path ? (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w200/${e?.poster_path}`}
+                            alt=""
+                            className="rounded-md w-full hover:scale-105"
+                          />
+                        ) : (
+                          <div className="bg-gray-300 rounded-md w-full h-[340px] flex justify-center items-center">
+                            <p className="text-gray-500">Image Not Available</p>
+                          </div>
+                        )}
                         <p className="mt-4">
                           <strong>{e?.title}</strong>
                         </p>
@@ -227,48 +338,12 @@ export default function MovieApp() {
                       </div>
                     ))}
                   </div>
-                </div>
-              ) : (
-                <div className="mx-auto max-w-[90%] grid grid-cols-5 gap-8 pb-2 ">
-                  {search?.map((e) => (
-                    <div
-                      key={e?.id}
-                      onClick={() => {
-                        navigate("/detailSearch", { state: { id: e?.id } });
-                      }}
-                      className="w-[250px] px-3"
-                    >
-                      {e?.poster_path ? (
-                        <img
-                          src={`https://image.tmdb.org/t/p/w200/${e?.poster_path}`}
-                          alt=""
-                          className="rounded-md w-full hover:scale-105"
-                        />
-                      ) : (
-                        <div className="bg-gray-300 rounded-md w-full h-[340px] flex justify-center items-center">
-                          <p className="text-gray-500">Image Not Available</p>
-                        </div>
-                      )}
-                      <p className="mt-4">
-                        <strong>{e?.title}</strong>
-                      </p>
-                      <div className="flex">
-                        <p className="text-gray-400">{e?.release_date}</p>
-                      </div>
-                      <div className="flex">
-                        <StarIcon className="h-6  text-yellow-500"></StarIcon>
-                        <p className="ms-1">{e?.vote_average.toFixed(1)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
         </section>
       )}
-      
     </div>
   );
 }
